@@ -20,52 +20,57 @@ class Program
         var rootCommand = new RootCommand("QuickScreenshot - A fast CLI tool for taking screenshots");
 
         // Options
-        var outputOption = new Option<string>(
-            aliases: ["--output", "-o"],
-            description: "Output file path (default: screenshots/screenshot_[timestamp].png)",
-            getDefaultValue: () => $"screenshots/screenshot_{DateTime.Now:yyyyMMdd_HHmmss}.png"
-        );
+        var outputOption = new Option<string>("--output", "-o")
+        {
+            Description = "Output file path (default: screenshots/screenshot_[timestamp].png)"
+        };
+        outputOption.DefaultValueFactory = _ => $"screenshots/screenshot_{DateTime.Now:yyyyMMdd_HHmmss}.png";
 
-        var formatOption = new Option<SupportedFormat>(
-            aliases: ["--format", "-f"],
-            description: "Image format (PNG, JPEG, BMP, GIF)",
-            getDefaultValue: () => SupportedFormat.PNG
-        );
+        var formatOption = new Option<SupportedFormat>("--format", "-f")
+        {
+            Description = "Image format (PNG, JPEG, BMP, GIF)"
+        };
+        formatOption.DefaultValueFactory = _ => SupportedFormat.PNG;
 
-        var qualityOption = new Option<int>(
-            aliases: ["--quality", "-q"],
-            description: "JPEG quality (1-100, only applies to JPEG format)",
-            getDefaultValue: () => 90
-        );
+        var qualityOption = new Option<int>("--quality", "-q")
+        {
+            Description = "JPEG quality (1-100, only applies to JPEG format)"
+        };
+        qualityOption.DefaultValueFactory = _ => 90;
 
+        var windowOption = new Option<string?>("--window", "-w")
+        {
+            Description = "Capture a specific window by title (partial match)"
+        };
 
+        var listWindowsOption = new Option<bool>("--list-windows", "-l")
+        {
+            Description = "List all available windows"
+        };
 
-        var windowOption = new Option<string?>(
-            aliases: ["--window", "-w"],
-            description: "Capture a specific window by title (partial match)"
-        );
-
-        var listWindowsOption = new Option<bool>(
-            aliases: ["--list-windows", "-l"],
-            description: "List all available windows"
-        );
-
-        var delayOption = new Option<int>(
-            aliases: ["--delay", "-d"],
-            description: "Delay in seconds before taking screenshot",
-            getDefaultValue: () => 0
-        );
+        var delayOption = new Option<int>("--delay", "-d")
+        {
+            Description = "Delay in seconds before taking screenshot"
+        };
+        delayOption.DefaultValueFactory = _ => 0;
 
         // Add options to root command
-        rootCommand.AddOption(outputOption);
-        rootCommand.AddOption(formatOption);
-        rootCommand.AddOption(qualityOption);
-        rootCommand.AddOption(windowOption);
-        rootCommand.AddOption(listWindowsOption);
-        rootCommand.AddOption(delayOption);
+        rootCommand.Options.Add(outputOption);
+        rootCommand.Options.Add(formatOption);
+        rootCommand.Options.Add(qualityOption);
+        rootCommand.Options.Add(windowOption);
+        rootCommand.Options.Add(listWindowsOption);
+        rootCommand.Options.Add(delayOption);
 
-        rootCommand.SetHandler(async (string output, SupportedFormat format, int quality, string? window, bool listWindows, int delay) =>
+        rootCommand.SetAction(async (parseResult, cancellationToken) =>
         {
+            var output = parseResult.GetValue(outputOption);
+            var format = parseResult.GetValue(formatOption);
+            var quality = parseResult.GetValue(qualityOption);
+            var window = parseResult.GetValue(windowOption);
+            var listWindows = parseResult.GetValue(listWindowsOption);
+            var delay = parseResult.GetValue(delayOption);
+
             var screenshotService = new ScreenshotService();
             
             try
@@ -73,7 +78,7 @@ class Program
                 if (listWindows)
                 {
                     await screenshotService.ListWindowsAsync();
-                    return;
+                    return 0;
                 }
 
                 // Convert SupportedFormat to ImageFormat
@@ -86,16 +91,18 @@ class Program
                     _ => ImageFormat.Png
                 };
 
-                await screenshotService.TakeScreenshotAsync(output, imageFormat, quality, window, delay);
+                await screenshotService.TakeScreenshotAsync(output!, imageFormat, quality, window, delay);
+                return 0;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
                 Console.WriteLine(ex.StackTrace);
-                Environment.Exit(1);
+                return 1;
             }
-        }, outputOption, formatOption, qualityOption, windowOption, listWindowsOption, delayOption);
+        });
 
-        return await rootCommand.InvokeAsync(args);
+        var parseResult = rootCommand.Parse(args);
+        return await parseResult.InvokeAsync();
     }
 }
