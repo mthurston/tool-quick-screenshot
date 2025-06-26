@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+    
+    - name: Restore dependencies
+      run: dotnet restore QuickScreenshot.csproj
+    
+    - name: Build Debug
+      run: dotnet build QuickScreenshot.csproj --configuration Debug --no-restore
+    
+    - name: Build Release
+      run: dotnet build QuickScreenshot.csproj --configuration Release --no-restore
+    
+    - name: Run tests
+      run: dotnet test QuickScreenshot.csproj --configuration Release --no-build --verbosity normal
+    
+    - name: Create self-contained executable
+      run: dotnet publish QuickScreenshot.csproj -c Release -r win-x64 --self-contained -o ./publish -p:PublishAot=false
+    
+    - name: Create NuGet package
+      run: dotnet pack QuickScreenshot.csproj -c Release --output ./nupkg
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-artifacts
+        path: |
+          ./publish/
+          ./nupkg/
+        retention-days: 30
+
+  # Optional: Test AOT compilation (requires additional setup)
+  build-aot:
+    runs-on: windows-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+    
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v2
+    
+    - name: Setup MSVC
+      uses: ilammy/msvc-dev-cmd@v1
+    
+    - name: Restore dependencies
+      run: dotnet restore QuickScreenshot.csproj
+    
+    - name: Attempt AOT compilation
+      run: dotnet publish QuickScreenshot.csproj -c Release -r win-x64 --self-contained -o ./publish-aot -p:IsPublishing=true
+      continue-on-error: true
+    
+    - name: Upload AOT artifacts
+      uses: actions/upload-artifact@v4
+      if: success()
+      with:
+        name: aot-build
+        path: ./publish-aot/
+        retention-days: 30
