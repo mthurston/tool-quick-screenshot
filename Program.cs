@@ -2,6 +2,7 @@ using System.CommandLine;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 namespace QuickScreenshot;
 
@@ -15,6 +16,7 @@ public enum SupportedFormat
 
 class Program
 {
+    [SupportedOSPlatform("windows6.1")]
     static async Task<int> Main(string[] args)
     {
         var rootCommand = new RootCommand("QuickScreenshot - A fast CLI tool for taking screenshots");
