@@ -2,10 +2,12 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Text;
 
 namespace QuickScreenshot;
 
+[SupportedOSPlatform("windows6.1")]
 public class ScreenshotService
 {
     // Windows API imports
