@@ -1,0 +1,13 @@
+# Global code owners for all files
+* @mthurston
+
+# Dependency updates (Dependabot PRs)
+# NuGet packages
+**/*.csproj @mthurston
+**/packages.config @mthurston
+
+# GitHub Actions workflows  
+.github/workflows/ @mthurston
+
+# Dependabot configuration
+.github/dependabot.yml @mthurston

@@ -1,51 +1,29 @@
-# Configuration for Dependabot dependency updates and security alerts
-# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
-
 version: 2
 updates:
-  # Enable version updates for NuGet packages
+  # Enable version updates for .NET / NuGet
   - package-ecosystem: "nuget"
     directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
       time: "09:00"
-    # Allow both direct and indirect dependencies
-    allow:
-      - dependency-type: "all"
-    # Automatically merge minor and patch updates
-    open-pull-requests-limit: 10
-    # Add labels to PRs
-    labels:
-      - "dependencies"
-      - "dotnet"
-    # Reviewers for dependency PRs (optional - add your GitHub username)
-    reviewers:
-      - "mthurston"
-    # Commit message options
+    open-pull-requests-limit: 5
+    assignees:
+      - "@me"
     commit-message:
-      prefix: "deps"
-      prefix-development: "deps-dev"
+      prefix: "chore"
       include: "scope"
-    # Group related updates together
-    groups:
-      system-dependencies:
-        patterns:
-          - "System.*"
-        update-types:
-          - "minor"
-          - "patch"
-      
-  # Monitor GitHub Actions dependencies
+    
+  # Enable version updates for GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
       time: "09:00"
-    labels:
-      - "dependencies"
-      - "github-actions"
+    open-pull-requests-limit: 3
+    assignees:
+      - "@me"
     commit-message:
       prefix: "ci"
       include: "scope"
