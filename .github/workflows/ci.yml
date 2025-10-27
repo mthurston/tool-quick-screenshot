@@ -37,7 +37,7 @@ jobs:
       run: dotnet pack QuickScreenshot.csproj -c Release --output ./nupkg
     
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: build-artifacts
         path: |
@@ -72,7 +72,7 @@ jobs:
       continue-on-error: true
     
     - name: Upload AOT artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       if: success()
       with:
         name: aot-build
